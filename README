@@ -1,0 +1,14 @@
+Installation python modules:
+- Go to the python folder (e.g., python/Feedback)
+- Run 'python setup.py'
+- Export the following environment variables (where @PREFIX@ is the installation
+  directory provided during configuration (e.g., ./configure --prefix=$HOME/Local/):
+
+		export CNBITK_PYTHON_LIB=@PREFIX@/lib/cnbipython/
+		export CNBITK_PYTHON_DATA=@PREFIX@/share/cnbipython/
+		export PYTHONPATH=$PYTHONPATH:@PREFIX@/lib/cnbipython/
+
+		(This line can be added also to your $HOME/.profile, thus logout is
+		required)
+
+
