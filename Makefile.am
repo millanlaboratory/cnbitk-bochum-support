@@ -1,11 +1,12 @@
 ACLOCAL_AMFLAGS=-I m4
-#SUBDIRS = src/ \
-#		  extra/ \
-#	  	  gui/ \
-#	  	  python/Feedback/
+SUBDIRS = desktop/ 	 \
+		  gui/ 		 \
+	  	  icons/ 	 \
+	  	  images/ 	 \
+		  launchers/ \
+		  utilities/ 
 
-# Removed src/ for the time being (using python feedback)
-		  
+
 REMOVE_DISTDIR = \
    { test ! -d "$(distdir)" \
    || { find "$(distdir)" -type d ! -perm -200 -exec chmod u+w {} ';' \

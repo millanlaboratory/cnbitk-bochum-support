@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=eegview-64
+Name[en_US]=eegview-AntNeuro-64EEG
+Exec=eegview --device=eego
+Comment[en_US]=EEGView Desktop Launcher for AntNeuro (64-channel)
+Name=eegview-AntNeuro-64EEG
+Comment=EEGView Desktop Launcher for AntNeuro (64-channel)

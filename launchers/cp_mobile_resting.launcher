@@ -1,0 +1,107 @@
+#!/bin/bash
+
+NAME="cp_mobile_resting"
+
+# Default BCI value
+DEFAULT_BLOCK=resting
+DEFAULT_TASKSET=resting_fixate
+DEFAULT_IPLOOP="127.0.0.1"
+DEFAULT_MODALITY="offline"
+DEFAULT_MODALITY_CMD="F"
+DEFAULT_PROTOCOL="resting_mobile_offline"
+
+usage(){
+	printf "\n[$NAME] - Usage: $NAME -x XMLPATH -F|-N|-G|-C [OPTION]...\n\n"
+	printf "	-x 		path of the xml file\n"
+	printf "	-b 		experiment block 	[Default: 'resting']\n"
+	printf "	-t 		experiment taskset 	[Default: 'fixate']\n"
+	printf "	-a 		Loop ip [Default: '127.0.0.1']\n"
+}
+
+block=$DEFAULT_BLOCK
+taskset=$DEFAULT_TASKSET
+modality_name=$DEFAULT_MODALITY
+modality_cmd=$DEFAULT_MODALITY_CMD
+bci_protocol=$DEFAULT_PROTOCOL
+flag_xml=false
+
+# Getting optional arguments
+while getopts ":t:b:a:x:" opt; do
+	case $opt in
+		t)
+			taskset=$OPTARG
+			;;
+		b)
+			block=$OPTARG
+			;;
+		x)
+			xml=$OPTARG
+			flag_xml=true
+			;;
+		\?)
+			echo "[$NAME] - Invalid option: -$OPTARG" >&2
+			usage;
+			exit 1
+			;;
+		:)
+			echo "[$NAME] - Option -$OPTARG requires an argument.">&2
+			usage;
+			exit 1
+			;;
+	esac
+done
+
+if ! $flag_xml 
+then
+	echo "[$NAME] - XML filepath must be provided (-x XMLPATH)" >&2
+	usage;
+    exit 1
+fi
+
+
+echo "[$NAME] - XML path:     $xml"
+echo "[$NAME] - BCI block:    $block"
+echo "[$NAME] - BCI taskset:  $taskset"
+echo "[$NAME] - BCI modality: $modality_name (-$modality_cmd)"
+echo "[$NAME] - BCI Loop IP:  $iploop"
+echo "[$NAME] - BCI protocol: $bci_protocol"
+
+# Unload pre-existing parameters
+echo "[$NAME] - Unload pre-existing parameters"
+cl_init -u -B $block
+
+# Upload all parameters to nameserver
+echo "[$NAME] - Uploading parameters to nameserver"
+cl_init -x $xml -l -$modality_cmd -B $block -T $taskset
+
+
+# Open GDF and log file
+echo "[$NAME] - Opening GDF and log files"
+filename=$(ccfg_cli -x $xml -$modality_cmd -B $block -T $taskset -a)
+gdf_filename="$filename.wheelchair.$modality_name.gdf"
+log_filename=$(ccfg_cli -x $xml -$modality_cmd -B $block -T $taskset -o)
+cl_rpc openxdf $gdf_filename $log_filename "wheelchair"
+echo "   - GDF filename: $gdf_filename"
+echo "   - LOG filename: $log_filename"
+
+
+# Start protocol
+echo "[$NAME] - Starting the protocol: $bci_protocol"
+$bci_protocol
+
+# Close the GDF file
+echo "[$NAME] - Closing GDF file"
+cl_rpc closexdf
+sleep 1
+
+# Unload configuration from nameserver
+echo "[$NAME] - Unload configuration from nameserver"
+cl_init -u -B $block
+if [ "$modality_name" != "offline" ]; then
+	cl_rpc eraseconfig integrator type 
+	cl_rpc eraseconfig control type 
+fi
+sleep 1
+
+exit 0
+

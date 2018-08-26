@@ -1,0 +1,31 @@
+#!/bin/bash
+
+while [ -z "$xml" ]
+do
+	xml=$(yad --title="Select XML file" \
+		--file --file-filter="*.xml" \
+		--filename="$HOME/Desktop/mi_wheelchair_bochum/" \
+		--width=800 \
+		--height=600 \
+		--center)
+
+	again=1	
+	if [ -z "$xml" ]; then
+		check=$(yad --text="\n   You must select a XML!   " --center \
+			--image=$CNBITK_SHARE_DATA/cnbimobile/images/cnbi_icon.gif --title="Configuration error" \
+			--button="gtk-close:0" \
+			--button="gtk-ok:1" \
+			--sticky \
+			--fixed)
+		again=$?
+	fi
+
+	if [ "$again" -eq 0 ]; then
+		exit 1
+	fi
+done
+
+	
+echo xml file: $xml
+	
+cp_mobile_resting.launcher -x $xml

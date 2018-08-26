@@ -60,6 +60,6 @@ AC_SUBST([REVISION],[lib_revision])
 AC_SUBST([AGE],[lib_age])
 AC_SUBST(AM_LDFLAGS)
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile desktop/Makefile gui/Makefile icons/Makefile images/Makefile launchers/Makefile utilities/Makefile])
 
 AC_OUTPUT

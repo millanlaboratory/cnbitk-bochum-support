@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Check if the environment variable $CNBITK_DATA exists. If true, it will launch
+# the loop from the pointing directory (and the data will be saved in the same
+# directory). If false, it will launch the cl_getdirectory script that it will
+# check for the existence of subfolders with SUBJECTID_mi_wheelchair format in
+# $HOME/Desktop/mi_wheelchair_bochum/. A dialog will allow the user to select
+# the current subject and then the working directory will be set in the
+# subfolder with the current date (if it does not exist it will exit).
+
+# Checking for the existence of $CNBITK_DATA, if not launch the cl_getdirectory script
+if [[ -z "${CNBITK_DATA}" ]]; then
+	WORKINGDIR=`cl_getdirectory`
+else
+	WORKINGDIR=$CNBITK_DATA
+fi
+
+# Checking for the existence of the working directory. If false exit with error.
+# If true launch the loop from this directory
+if [ ! -d "$WORKINGDIR" ]; then
+	echo "[cl_runloop] - Directory $WORKINGDIR does not exist. Create it before launching the loop">&2
+	yad --title "Error" --text "Directory does not exist.\nCreate it and re-lunch the loop" --text-align=center --width=300 --center --button="gtk-ok":0 --buttons-layout=center
+
+	
+	exit 1
+else
+	echo "[cl_runloop] - Data will be saved in $WORKINGDIR"
+fi
+
+cl_rpcnotify "CnbiTk cl_runloop" "Starting AntNeuro 64-channel"
+cl_copyxsl
+
+gnome-terminal \
+---tab --working-directory=$WORKINGDIR -e "bash -c 'cl_keepalive cl_nameserver'" --title "CnbiTk Nameserver" \
+---tab --working-directory=$WORKINGDIR -e "bash -c 'sleep 1; cl_keepalive cl_processing'" --title "CnbiTk Processing" \
+---tab --working-directory=$WORKINGDIR -e "bash -c 'sleep 2; cl_keepalive cl_acquisition -d eego'" --title "CnbiTk Acquisition"

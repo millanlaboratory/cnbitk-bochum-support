@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=cnbiloop-antneuro-32
+Name[en_US]=CNBILoop-AntNeuro-32EEG
+Exec=cl_runloop_antneuro_32.launcher
+Comment[en_US]=CNBI Loop Desktop Launcher for AntNeuro (32-channel)
+Name=CNBI Loop-AntNeuro-32EEG
+Comment=CNBI Loop Desktop Launcher for AntNeuro (32-channel)

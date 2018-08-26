@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=cnbiloop-gtec-16
+Name[en_US]=CNBILoop-gUSBamp-16EEG
+Exec=cl_runloop -d gtec
+Comment[en_US]=CNBI Loop Desktop Launcher for gtec (16-channel)
+Name=CNBI Loop - gUSBamp - 16 EEG
+Comment=CNBI Loop Desktop Launcher for gtec (16-channel)

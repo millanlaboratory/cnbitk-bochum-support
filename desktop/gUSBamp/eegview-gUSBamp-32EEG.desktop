@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=eegview-gtec-32
+Name[en_US]=eegview-gUSBamp-32EEG
+Exec=eegview --device="gtec|deviceid|any+any"
+Comment[en_US]=EEGView Desktop Launcher for gtec (32-channel)
+Name=eegview-gUSBamp-32EEG
+Comment=EEGView Desktop Launcher for gtec (32-channel)

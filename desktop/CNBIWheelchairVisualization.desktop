@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=redhat-web-browser
+Name[en_US]=CNBIWheelchairVisualization
+Exec=bash -c 'source $ROS_WORKSPACE_CURRENT/devel/setup.bash && rosrun rviz rviz'
+Comment[en_US]=Desktop launcher for rviz
+Name=CNBIWheelchairVisualization
+Comment=Desktop launcher for rviz

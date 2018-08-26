@@ -1,0 +1,60 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
+import os
+import re
+from Tkinter import *
+import ttk 
+import datetime
+
+# Define empty path variable
+path = ''
+
+# Get current date in YYYYMMDD format
+now  = datetime.datetime.now()
+date = now.strftime("%Y%m%d")
+
+# Get current directory for the data
+rootdir = os.getenv('HOME', '~') + '/Desktop/mi_wheelchair_bochum/'
+
+# Check subfolder in the data directory with SUBJECTID_mi_wheelchair format
+subjects = []
+for root, dirs, filename in os.walk(rootdir, followlinks=True):
+    for name in dirs:
+        m = re.search('(.+?)_mi_wheelchair', name)
+        if m:
+            subjects.append(m.group(1))
+    break
+
+# Create Tk dialog
+window = Tk()
+window.title('')
+ttk.Style().configure("TButton", font=('Helvetica', '12'))
+ttk.Style().configure("TLabel", font=('Helvetica', '12'), justify='left')
+frame = ttk.Frame(window, padding='12 12 12 12')
+frame.grid(column = 0,  row=0, sticky =(N, W, E, S))
+
+ttk.Label(frame, text="Select the subject:").grid(column=0, row=1, columnspan=2, sticky='w')
+selected=IntVar()
+for sId, sname in enumerate(subjects):
+    Radiobutton(frame,value=sId, variable=selected).grid(column=0, row=2+sId)
+    ttk.Label(frame, text=sname).grid(column=1, row=2+sId, sticky='w')
+
+def on_click():
+    global path
+    SelectedSubject = subjects[selected.get()]
+    path = SelectedSubject + "_mi_wheelchair/" + date + "/"
+    window.destroy()
+
+btn = ttk.Button(frame, text="Ok", command=on_click)
+btn.grid(column=0, row = sId+3, columnspan=2)
+
+# Launch TK dialog
+window.mainloop()
+
+# Re-create the full path
+path = rootdir + path
+
+# Print (return) the path
+print(path)
+

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=cnbiloop-gtec-32
+Name[en_US]=CNBILoop-gUSBamp-32EEG
+Exec=cl_runloop_gUSBamp_32.launcher
+Comment[en_US]=CNBI Loop Desktop Launcher for gtec (32-channel)
+Name=CNBI Loop - gUSBamp - 32 EEG
+Comment=CNBI Loop Desktop Launcher for gtec (32-channel)

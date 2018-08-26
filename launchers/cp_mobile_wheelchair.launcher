@@ -1,0 +1,223 @@
+#!/bin/bash
+
+NAME="cp_mobile_wheelchair"
+
+# Default BCI value
+DEFAULT_BLOCK=mi
+DEFAULT_TASKSET=mi_bhbf
+DEFAULT_IPLOOP="127.0.0.1"
+DEFAULT_SAVE_FLAG=true
+DEFAULT_BCI_INTEGRATOR_TYPE=ema
+DEFAULT_BCI_CONTROL_TYPE=discrete
+
+
+usage(){
+	printf "\n[$NAME] - Usage: $NAME -x XMLPATH -F|-N|-G|-C [OPTION]...\n\n"
+	printf "	-x 		path of the xml file\n"
+	printf "	-F 		Paradigm Offline (cued offline paradigm, on place wheelchair movement)\n"
+	printf "	-N 		Paradigm Online	(cued online paradigm, on place wheelchair movement)\n"
+	printf "	-G 		Paradigm Guided Control (cued online paradigm, free wheelchair movement)\n"
+	printf "	-C 		Paradigm Free Control (uncued online paradigm, free wheelchair movement)\n"
+	printf "	-b 		experiment block 	[Default: 'mi']\n"
+	printf "	-t 		experiment taskset 	[Default: 'mi_bhbf']\n"
+	printf "	-a 		Loop ip [Default: '127.0.0.1']\n"
+	printf "	-s 		Save data (GDF and BAG) [Default: false (for debugging)]\n"
+}
+
+block=$DEFAULT_BLOCK
+taskset=$DEFAULT_TASKSET
+iploop=$DEFAULT_IPLOOP
+flag_save=$DEFAULT_SAVE_FLAG
+
+integrator_type=$DEFAULT_BCI_INTEGRATOR_TYPE
+control_type=$DEFAULT_BCI_CONTROL_TYPE
+
+flag_xml=false
+flag_mod=false
+num_mod=0
+
+# Getting optional arguments
+while getopts ":t:b:a:x:FNCGs" opt; do
+	case $opt in
+		t)
+			taskset=$OPTARG
+			;;
+		b)
+			block=$OPTARG
+			;;
+		a)
+			iploop=$OPTARG
+			;;
+		x)
+			xml=$OPTARG
+			flag_xml=true
+			;;
+		F)
+			modality_name="offline"
+			modality_cmd="F"
+			bci_protocol="mi_mobile_offline"
+			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_onplace.launch enable_bci:=true"
+			flag_mod=true
+			num_mod=$((num_mod+1))
+			;;
+		N)
+			modality_name="online"
+			modality_cmd="N"
+			bci_protocol="mi_mobile_online"
+			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_onplace.launch enable_bci:=true"
+			flag_mod=true
+			num_mod=$((num_mod+1))
+			;;
+		G)
+			modality_name="guided"
+			modality_cmd="N"		# From BCI perspective control=online
+			bci_protocol="mi_mobile_online"
+			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_navigation_dynamics.launch enable_bci:=true enable_joystick:=true"
+			flag_mod=true
+			num_mod=$((num_mod+1))
+			;;
+		C)
+			modality_name="control"
+			modality_cmd="N"		# From BCI perspective control=online
+			bci_protocol="mi_mobile_control"
+			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_navigation_dynamics.launch enable_bci:=true enable_joystick:=true"
+			flag_mod=true
+			num_mod=$((num_mod+1))
+			;;
+		s)
+			flag_save=true
+			;;
+		\?)
+			echo "[$NAME] - Invalid option: -$OPTARG" >&2
+			usage;
+			exit 1
+			;;
+		:)
+			echo "[$NAME] - Option -$OPTARG requires an argument.">&2
+			usage;
+			exit 1
+			;;
+	esac
+done
+
+if ! $flag_xml 
+then
+	echo "[$NAME] - XML filepath must be provided (-x XMLPATH)" >&2
+	usage;
+    exit 1
+fi
+
+if [ ! $flag_mod ] || [ $num_mod -ne 1 ] 
+then
+	echo "[$NAME] - One (and only one) modality must be provided (-F, -N or -C {offline, online, control})" >&2
+	usage;
+    exit 1
+fi
+
+
+if ! $flag_save
+then
+	printf "\n\n>>>>>>> !!!!!!!!! GDF and BAG data will not be saved !!!!!!!!!! <<<<<<<<\n\n"
+fi
+
+echo "[$NAME] - XML path:     $xml"
+echo "[$NAME] - BCI block:    $block"
+echo "[$NAME] - BCI taskset:  $taskset"
+echo "[$NAME] - BCI modality: $modality_name (-$modality_cmd)"
+echo "[$NAME] - BCI Loop IP:  $iploop"
+echo "[$NAME] - BCI protocol: $bci_protocol"
+echo "[$NAME] - ROS launcher: $ros_launcher"
+
+# Unload pre-existing parameters
+echo "[$NAME] - Unload pre-existing parameters"
+cl_init -u -B $block
+
+# Upload all parameters to nameserver
+echo "[$NAME] - Uploading parameters to nameserver"
+cl_init -x $xml -l -$modality_cmd -B $block -T $taskset
+
+# Upload integrator parameters (Legacy mode) [not for offline]
+if [ "$modality_name" != "offline" ]; then
+	echo "[$NAME] - Uploading integrator to nameserver: $integrator_type (legacy)"
+	cl_rpc storeconfig integrator type $integrator_type
+fi
+
+# Upload control parameters (Legacy mode) [not for offline]
+if [ "$modality_name" != "offline" ]; then
+	echo "[$NAME] - Uploading control type to nameserver: $control_type (legacy)"
+	cl_rpc storeconfig control type $control_type
+fi
+
+
+# Open GDF and log file
+if $flag_save
+then
+	echo "[$NAME] - Opening GDF and log files"
+	filename=$(ccfg_cli -x $xml -$modality_cmd -B $block -T $taskset -a)
+	gdf_filename="$filename.wheelchair.$modality_name.gdf"
+	log_filename=$(ccfg_cli -x $xml -$modality_cmd -B $block -T $taskset -o)
+	cl_rpc openxdf $gdf_filename $log_filename "wheelchair"
+fi
+
+# Start BCI processing if not offline modality
+if [ "$modality_name" != "offline" ]; then
+	echo "[$NAME] - Starting BCI process"
+	proc_pid=$(cl_init -x $xml -scN -B $block -T $taskset)
+fi
+
+# Start the GUI if not offline modality
+if [ "$modality_name" != "offline" ]; then
+	echo "[$NAME] - Launching the GUI"
+	gui_mobile_parameters -x $xml -t $taskset &
+fi
+
+# Start ROS launcher
+cmd_recording="enable_recording:=false"
+if $flag_save
+then
+	cmd_recording="enable_recording:=true set_bag_name:=$filename.wheelchair.$modality_name"
+fi
+gnome-terminal --tab -e "bash -c '. $ROS_WORKSPACE_CURRENT/devel/setup.bash && $ros_launcher $cmd_recording'"
+
+# Start protocol
+echo "[$NAME] - Starting the protocol: $bci_protocol"
+$bci_protocol
+
+# Terminate MATLAB prcesses if not offline modality
+if [ "$modality_name" != "offline" ]; then
+	echo "[$NAME] - Terminating BCI process"
+	cl_rpc terminate $proc_pid
+	sleep 1
+fi
+
+# Close the GDF file
+if $flag_save
+then
+	echo "[$NAME] - Closing GDF file"
+	cl_rpc closexdf
+	sleep 1
+fi
+
+# Unload configuration from nameserver
+echo "[$NAME] - Unload configuration from nameserver"
+cl_init -u -B $block
+if [ "$modality_name" != "offline" ]; then
+	cl_rpc eraseconfig integrator type 
+	cl_rpc eraseconfig control type 
+fi
+sleep 1
+
+
+# Close GUI if not offline modality
+if [ "$modality_name" != "offline" ]; then
+	echo "[$NAME] - Closing the GUI"
+	killall -15 python
+fi
+
+# Close ROS 
+rosmaster_pid=$(pgrep -o -x roslaunch)
+echo "[$NAME] - Closing roslaunch ($rosmaster_pid)"
+kill -INT $rosmaster_pid
+
+exit 0
+

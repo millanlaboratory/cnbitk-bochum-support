@@ -1,0 +1,100 @@
+#!/bin/bash
+
+while [ -z "$xml" ]
+do
+	xml=$(yad --title="Select XML file" \
+		--file --file-filter="*.xml" \
+		--filename="$HOME/Desktop/mi_wheelchair_bochum/" \
+		--width=800 \
+		--height=600 \
+		--center)
+
+	again=1	
+	if [ -z "$xml" ]; then
+		check=$(yad --text="\n   You must select a XML!   " --center \
+			--image=$CNBITK_SHARE_DATA/cnbimobile/images/cnbi_icon.gif --title="Configuration error" \
+			--button="gtk-close:0" \
+			--button="gtk-ok:1" \
+			--sticky \
+			--fixed)
+		again=$?
+	fi
+
+	if [ "$again" -eq 0 ]; then
+		exit 1
+	fi
+done
+
+while [ -z "$taskset" ]
+do
+	taskset=$(yad --title="Select taskset" \
+		--width=600 \
+		--height=300 \
+		--center \
+		--list --radiolist \
+		--column= \
+		--column=Taskset:TXT \
+		--column=Description:TXT \
+		"   " "mi_bhbf" "Both Hands vs. Both Feet" \
+		"   " "mi_rhlh" "Right Hand vs. Left Hand" \
+		"   " "mi_rhbf" "Right Hand vs. Both Feet" \
+		"   " "mi_lhbf" "Left Hand  vs. Both Feet" \
+		--print-column=2 \
+		--separator=)
+	
+	again=1	
+	if [ -z "$taskset" ]; then
+		check=$(yad --text="\n   You must select a taskset!   " --center \
+			--image=$CNBITK_SHARE_DATA/cnbimobile/images/cnbi_icon.gif --title="Configuration error" \
+			--button="gtk-close:0" \
+			--button="gtk-ok:1" \
+			--sticky \
+			--fixed)
+		again=$?
+	fi
+
+	if [ "$again" -eq 0 ]; then
+		exit 1
+	fi
+done
+
+while [ -z "$paradigm" ]
+do
+	paradigm=$(yad --title="Select paradigm" \
+		--width=600 \
+		--height=300 \
+		--center \
+		--list --radiolist \
+		--column= \
+		--column=cmd:TXT \
+		--column=Description:TXT \
+		" " "F" "Training offline (wheelchair turns in place, uncued protocol)" \
+		" " "N" "Training online (wheelchair turns in place, uncued protocol)" \
+		" " "G" "Training guided (wheelchair moves forward,  cued protocol)" \
+		" " "C" "Free drive (wheelchair moves forward,  uncued protocol)" \
+		--print-column=2 \
+		--hide-column=2 \
+		--separator=)
+	
+	again=1	
+	if [ -z "$paradigm" ]; then
+		check=$(yad --text="\n   You must select a paradigm!   " --center \
+			--image=$CNBITK_SHARE_DATA/cnbimobile/images/cnbi_icon.gif --title="Configuration error" \
+			--button="gtk-close:0" \
+			--button="gtk-ok:1" \
+			--sticky \
+			--fixed)
+		again=$?
+	fi
+
+	if [ "$again" -eq 0 ]; then
+		exit 1
+	fi
+done
+	
+echo xml file: $xml
+echo taskset:  $taskset
+echo paradigm: $paradigm
+	
+#gnome-terminal -e "bash -c 'cp_mobile_wheelchair.launcher -x $xml -t $taskset -$paradigm'"
+cp_mobile_wheelchair.launcher -x $xml -t $taskset -$paradigm

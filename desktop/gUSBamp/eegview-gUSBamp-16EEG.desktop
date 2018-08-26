@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=eegview-gtec-16
+Name[en_US]=eegview-gUSBamp-16EEG
+Exec=eegview --device="gtec"
+Comment[en_US]=EEGView Desktop Launcher for gtec (16-channel)
+Name=eegview-gUSBamp-16EEG
+Comment=EEGView Desktop Launcher for gtec (16-channel)

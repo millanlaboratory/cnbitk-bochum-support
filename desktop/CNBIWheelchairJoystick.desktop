@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=cnbimobile-joystick
+Name[en_US]=CNBIWheelchairJoystick
+Exec=bash -c 'source $ROS_WORKSPACE_CURRENT/devel/setup.bash && roslaunch cnbiros_wheelchair_bochum wheelchair_navigation_joystick.launch'
+Comment[en_US]=CNBI Loop Desktop Launcher for wheelchair joystick control
+Name=CNBI Wheelchair Joystick
+Comment=CNBI Loop Desktop Launcher for wheelchair joystick control
