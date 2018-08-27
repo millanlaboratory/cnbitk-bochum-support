@@ -18,11 +18,10 @@ fi
 # Checking for the existence of the working directory. If false exit with error.
 # If true launch the loop from this directory
 if [ ! -d "$WORKINGDIR" ]; then
-	echo "[cl_runloop] - Directory $WORKINGDIR does not exist. Create it before launching the loop">&2
-	yad --title "Error" --text "Directory does not exist.\nCreate it and re-lunch the loop" --text-align=center --width=300 --center --button="gtk-ok":0 --buttons-layout=center
-
-	
-	exit 1
+	echo "[cl_runloop] - Directory $WORKINGDIR does not exist. Creating it">&2
+	mkdir -p $WORKINGDIR
+	#echo "[cl_runloop] - Directory $WORKINGDIR does not exist. Create it before launching the loop">&2
+	#yad --title "Error" --text "Directory does not exist.\nCreate it and re-lunch the loop" --text-align=center --width=300 --center --button="gtk-ok":0 --buttons-layout=center
 else
 	echo "[cl_runloop] - Data will be saved in $WORKINGDIR"
 fi
