@@ -68,8 +68,9 @@ do
 		--column= \
 		--column=cmd:TXT \
 		--column=Description:TXT \
-		" " "F" "Training offline (wheelchair turns in place, uncued protocol)" \
-		" " "N" "Training online (wheelchair turns in place, uncued protocol)" \
+		" " "F" "Training offline (wheelchair turns in place, cued protocol)" \
+		" " "P" "Training positive (wheelchair turns in place, cued protocol, positive feedback)" \
+		" " "N" "Training online (wheelchair turns in place, cued protocol)" \
 		" " "G" "Training guided (wheelchair moves forward,  cued protocol)" \
 		" " "C" "Free drive (wheelchair moves forward,  uncued protocol)" \
 		--print-column=2 \
@@ -91,7 +92,7 @@ do
 		exit 1
 	fi
 done
-	
+
 echo xml file: $xml
 echo taskset:  $taskset
 echo paradigm: $paradigm

@@ -9,12 +9,15 @@ DEFAULT_IPLOOP="127.0.0.1"
 DEFAULT_SAVE_FLAG=true
 DEFAULT_BCI_INTEGRATOR_TYPE=ema
 DEFAULT_BCI_CONTROL_TYPE=discrete
+DEFAULT_FEEDBACK_REAL=real
+DEFAULT_FEEDBACK_POSITIVE=positive
 
 
 usage(){
 	printf "\n[$NAME] - Usage: $NAME -x XMLPATH -F|-N|-G|-C [OPTION]...\n\n"
 	printf "	-x 		path of the xml file\n"
 	printf "	-F 		Paradigm Offline (cued offline paradigm, on place wheelchair movement)\n"
+	printf "	-P 		Paradigm Positive (cued online paradigm, on place wheelchair movement)\n"
 	printf "	-N 		Paradigm Online	(cued online paradigm, on place wheelchair movement)\n"
 	printf "	-G 		Paradigm Guided Control (cued online paradigm, free wheelchair movement)\n"
 	printf "	-C 		Paradigm Free Control (uncued online paradigm, free wheelchair movement)\n"
@@ -31,13 +34,14 @@ flag_save=$DEFAULT_SAVE_FLAG
 
 integrator_type=$DEFAULT_BCI_INTEGRATOR_TYPE
 control_type=$DEFAULT_BCI_CONTROL_TYPE
+feedback_type=$DEFAULT_FEEDBACK_REAL
 
 flag_xml=false
 flag_mod=false
 num_mod=0
 
 # Getting optional arguments
-while getopts ":t:b:a:x:FNCGs" opt; do
+while getopts ":t:b:a:x:FPNCGs" opt; do
 	case $opt in
 		t)
 			taskset=$OPTARG
@@ -55,7 +59,17 @@ while getopts ":t:b:a:x:FNCGs" opt; do
 		F)
 			modality_name="offline"
 			modality_cmd="F"
+			feedback_type=$DEFAULT_FEEDBACK_REAL
 			bci_protocol="mi_mobile_offline"
+			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_onplace.launch enable_bci:=true"
+			flag_mod=true
+			num_mod=$((num_mod+1))
+			;;
+		P)
+			modality_name="positive"
+			modality_cmd="N"
+			feedback_type=$DEFAULT_FEEDBACK_POSITIVE
+			bci_protocol="mi_mobile_online"
 			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_onplace.launch enable_bci:=true"
 			flag_mod=true
 			num_mod=$((num_mod+1))
@@ -63,6 +77,7 @@ while getopts ":t:b:a:x:FNCGs" opt; do
 		N)
 			modality_name="online"
 			modality_cmd="N"
+			feedback_type=$DEFAULT_FEEDBACK_REAL
 			bci_protocol="mi_mobile_online"
 			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_onplace.launch enable_bci:=true"
 			flag_mod=true
@@ -71,6 +86,7 @@ while getopts ":t:b:a:x:FNCGs" opt; do
 		G)
 			modality_name="guided"
 			modality_cmd="N"		# From BCI perspective control=online
+			feedback_type=$DEFAULT_FEEDBACK_REAL
 			bci_protocol="mi_mobile_online"
 			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_navigation_dynamics.launch enable_bci:=true enable_joystick:=true"
 			flag_mod=true
@@ -79,6 +95,7 @@ while getopts ":t:b:a:x:FNCGs" opt; do
 		C)
 			modality_name="control"
 			modality_cmd="N"		# From BCI perspective control=online
+			feedback_type=$DEFAULT_FEEDBACK_REAL
 			bci_protocol="mi_mobile_control"
 			ros_launcher="roslaunch cnbiros_wheelchair_bochum wheelchair_navigation_dynamics.launch enable_bci:=true enable_joystick:=true"
 			flag_mod=true
@@ -109,7 +126,7 @@ fi
 
 if [ ! $flag_mod ] || [ $num_mod -ne 1 ] 
 then
-	echo "[$NAME] - One (and only one) modality must be provided (-F, -N or -C {offline, online, control})" >&2
+	echo "[$NAME] - One (and only one) modality must be provided (-F, -P, -N or -C {offline, positive, online, control})" >&2
 	usage;
     exit 1
 fi
@@ -120,17 +137,24 @@ then
 	printf "\n\n>>>>>>> !!!!!!!!! GDF and BAG data will not be saved !!!!!!!!!! <<<<<<<<\n\n"
 fi
 
-echo "[$NAME] - XML path:     $xml"
-echo "[$NAME] - BCI block:    $block"
-echo "[$NAME] - BCI taskset:  $taskset"
-echo "[$NAME] - BCI modality: $modality_name (-$modality_cmd)"
-echo "[$NAME] - BCI Loop IP:  $iploop"
-echo "[$NAME] - BCI protocol: $bci_protocol"
-echo "[$NAME] - ROS launcher: $ros_launcher"
+echo "[$NAME] - XML path:      $xml"
+echo "[$NAME] - BCI block:     $block"
+echo "[$NAME] - BCI taskset:   $taskset"
+echo "[$NAME] - BCI modality:  $modality_name (-$modality_cmd)"
+echo "[$NAME] - BCI Loop IP:   $iploop"
+echo "[$NAME] - BCI protocol:  $bci_protocol"
+echo "[$NAME] - Feedback type: $feedback_type"
+echo "[$NAME] - ROS launcher:  $ros_launcher"
 
 # Unload pre-existing parameters
 echo "[$NAME] - Unload pre-existing parameters"
 cl_init -u -B $block
+if [ "$modality_name" != "offline" ]; then
+	cl_rpc eraseconfig integrator type 
+	cl_rpc eraseconfig control type 
+	cl_rpc eraseconfig feedback type
+fi
+sleep 1
 
 # Upload all parameters to nameserver
 echo "[$NAME] - Uploading parameters to nameserver"
@@ -146,6 +170,12 @@ fi
 if [ "$modality_name" != "offline" ]; then
 	echo "[$NAME] - Uploading control type to nameserver: $control_type (legacy)"
 	cl_rpc storeconfig control type $control_type
+fi
+
+# Upload feedback type parameters [not for offline]
+if [ "$modality_name" != "offline" ]; then
+	echo "[$NAME] - Uploading feedback type to nameserver: $feedback_type"
+	cl_rpc storeconfig feedback type $feedback_type
 fi
 
 
@@ -204,6 +234,7 @@ cl_init -u -B $block
 if [ "$modality_name" != "offline" ]; then
 	cl_rpc eraseconfig integrator type 
 	cl_rpc eraseconfig control type 
+	cl_rpc eraseconfig feedback type
 fi
 sleep 1
 
