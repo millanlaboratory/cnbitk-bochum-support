@@ -3,14 +3,14 @@
 while [ -z "$xml" ]
 do
 	xml=$(yad --title="Select XML file" \
-		--file --file-filter="*.xml" \
+		--file --file-filter="XML files| *.xml" \
 		--filename="$HOME/Desktop/mi_wheelchair_bochum/" \
 		--width=800 \
 		--height=600 \
 		--center)
 
 	again=1	
-	if [ -z "$xml" ]; then
+	if [ ! -f "$xml" ]; then
 		check=$(yad --text="\n   You must select a XML!   " --center \
 			--image=$CNBITK_SHARE_DATA/cnbimobile/images/cnbi_icon.gif --title="Configuration error" \
 			--button="gtk-close:0" \
