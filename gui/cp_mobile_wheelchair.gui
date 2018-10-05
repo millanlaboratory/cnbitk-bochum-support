@@ -98,4 +98,18 @@ echo taskset:  $taskset
 echo paradigm: $paradigm
 	
 #gnome-terminal -e "bash -c 'cp_mobile_wheelchair.launcher -x $xml -t $taskset -$paradigm'"
-cp_mobile_wheelchair.launcher -x $xml -t $taskset -$paradigm
+
+relaunch=1
+
+while  [ "$relaunch" -eq 1 ]
+do
+	cp_mobile_wheelchair.launcher -x $xml -t $taskset -$paradigm
+
+	check=$(yad --text="\n   Do you want to relaunch the protocol?   " --center \
+			--image=$CNBITK_SHARE_DATA/cnbimobile/images/cnbi_icon.gif --title="Configuration error" \
+			--button="gtk-close:0" \
+			--button="gtk-ok:1" \
+			--sticky \
+			--fixed)
+	relaunch=$?
+done
