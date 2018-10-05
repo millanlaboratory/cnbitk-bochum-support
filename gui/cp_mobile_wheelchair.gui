@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while [ -z "$xml" ]
+while [ ! -f "$xml" ]
 do
 	xml=$(yad --title="Select XML file" \
 		--file --file-filter="XML files| *.xml" \
